@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import sys; from pypdf import PdfReader; r=PdfReader\\('PLC_course.pdf'\\); print\\(len\\(r.pages\\)\\); [print\\('===PAGE',i+1,'==='\\); print\\(p.extract_text\\(\\)[:1500]\\) for i,p in enumerate\\(r.pages[:6]\\)]\")",
+      "Bash(python -c ' *)"
+    ]
+  }
+}

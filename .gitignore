@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+.DS_Store
+
+# Backend
+server/node_modules
+server/data
+
+.env
+.env.local
+*.log
+.vercel
