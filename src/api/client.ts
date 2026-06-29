@@ -25,11 +25,16 @@ export class ApiError extends Error {
   }
 }
 
+// API origin. Empty in dev → calls hit "/api" and Vite proxies them to the
+// local backend (vite.config.ts). In production set VITE_API_BASE to the
+// deployed backend origin, e.g. "https://voltrung-api.onrender.com".
+const API_ROOT = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(`${API_ROOT}/api${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",

@@ -1,0 +1,23 @@
+# Render blueprint for the VoltRung backend (Express + node:sqlite).
+#
+# Deploy: https://dashboard.render.com → New → Blueprint → connect this repo.
+# After it goes live, copy the service URL (e.g. https://voltrung-api.onrender.com)
+# and set it as VITE_API_BASE in the Vercel project, then redeploy the frontend.
+#
+# NOTE: the free plan has an EPHEMERAL filesystem and sleeps after ~15 min idle,
+# so the SQLite DB (accounts, progress) resets on restart/redeploy and the first
+# request after idle is slow (~50 s cold start). For persistent data, upgrade the
+# service to a paid plan and add a disk mounted where VOLTRUNG_DB points.
+services:
+  - type: web
+    name: voltrung-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: VOLTRUNG_JWT_SECRET
+        generateValue: true
