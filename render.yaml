@@ -1,13 +1,15 @@
-# Render blueprint for the VoltRung backend (Express + node:sqlite).
+# Render blueprint for the VoltRung backend (Express + libSQL/Turso).
 #
 # Deploy: https://dashboard.render.com → New → Blueprint → connect this repo.
 # After it goes live, copy the service URL (e.g. https://voltrung-api.onrender.com)
 # and set it as VITE_API_BASE in the Vercel project, then redeploy the frontend.
 #
-# NOTE: the free plan has an EPHEMERAL filesystem and sleeps after ~15 min idle,
-# so the SQLite DB (accounts, progress) resets on restart/redeploy and the first
-# request after idle is slow (~50 s cold start). For persistent data, upgrade the
-# service to a paid plan and add a disk mounted where VOLTRUNG_DB points.
+# PERSISTENCE: the backend uses Turso (libSQL) so account/progress data survives
+# restarts and redeploys even on Render's free plan. Set TURSO_DATABASE_URL and
+# TURSO_AUTH_TOKEN in the Render dashboard (they are sync:false = not in the repo).
+# Without them the server falls back to a local (ephemeral) SQLite file.
+# Note: the free plan still sleeps after ~15 min idle (~50 s cold start on the
+# first request) — but data is no longer lost.
 services:
   - type: web
     name: voltrung-api
@@ -21,3 +23,7 @@ services:
         value: "24"
       - key: VOLTRUNG_JWT_SECRET
         generateValue: true
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false

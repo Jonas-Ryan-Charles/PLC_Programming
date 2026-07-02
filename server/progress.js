@@ -15,8 +15,8 @@ export function levelForXp(totalXp) {
 }
 
 /** Build the full progress payload for a user from their recorded completions. */
-export function progressSummary(userId) {
-  const rows = listCompletions(userId);
+export async function progressSummary(userId) {
+  const rows = await listCompletions(userId);
   const completions = rows.map((r) => ({
     scenarioId: r.scenario_id,
     xp: r.xp,

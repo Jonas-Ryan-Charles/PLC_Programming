@@ -39,11 +39,11 @@ app.post("/api/auth/register", async (req, res) => {
   if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: "Enter a valid email address." });
   if (!password || password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters." });
 
-  if (getUserByEmail(email.toLowerCase())) {
+  if (await getUserByEmail(email.toLowerCase())) {
     return res.status(409).json({ error: "An account with that email already exists." });
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = createUser({
+  const user = await createUser({
     email: email.toLowerCase(),
     name: (name ?? "").trim() || email.split("@")[0],
     passwordHash,
@@ -53,7 +53,7 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body ?? {};
-  const user = email ? getUserByEmail(email.toLowerCase()) : null;
+  const user = email ? await getUserByEmail(email.toLowerCase()) : null;
   const ok = user && (await bcrypt.compare(password ?? "", user.password_hash));
   if (!ok) return res.status(401).json({ error: "Incorrect email or password." });
   res.json({ token: issueToken(user), user: publicUser(user) });
@@ -65,37 +65,37 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 
 // ─── Programs ────────────────────────────────────────────────────────────────
 
-app.get("/api/programs", requireAuth, (req, res) => {
-  res.json(listPrograms(req.user.id));
+app.get("/api/programs", requireAuth, async (req, res) => {
+  res.json(await listPrograms(req.user.id));
 });
 
-app.get("/api/programs/:id", requireAuth, (req, res) => {
-  const file = getProgram(req.user.id, req.params.id);
+app.get("/api/programs/:id", requireAuth, async (req, res) => {
+  const file = await getProgram(req.user.id, req.params.id);
   if (!file) return res.status(404).json({ error: "Program not found" });
   res.json(file);
 });
 
-app.post("/api/programs", requireAuth, (req, res) => {
+app.post("/api/programs", requireAuth, async (req, res) => {
   const file = req.body?.file;
   if (!file || typeof file.id !== "string" || typeof file.name !== "string" || !file.program) {
     return res.status(400).json({ error: "Malformed program file." });
   }
-  res.json(saveProgram(req.user.id, file));
+  res.json(await saveProgram(req.user.id, file));
 });
 
-app.delete("/api/programs/:id", requireAuth, (req, res) => {
-  const removed = deleteProgram(req.user.id, req.params.id);
+app.delete("/api/programs/:id", requireAuth, async (req, res) => {
+  const removed = await deleteProgram(req.user.id, req.params.id);
   if (!removed) return res.status(404).json({ error: "Program not found" });
   res.json({ ok: true });
 });
 
 // ─── Progress / XP ───────────────────────────────────────────────────────────
 
-app.get("/api/progress", requireAuth, (req, res) => {
-  res.json(progressSummary(req.user.id));
+app.get("/api/progress", requireAuth, async (req, res) => {
+  res.json(await progressSummary(req.user.id));
 });
 
-app.post("/api/progress/complete", requireAuth, (req, res) => {
+app.post("/api/progress/complete", requireAuth, async (req, res) => {
   const { scenarioId } = req.body ?? {};
   if (!scenarioId || typeof scenarioId !== "string") {
     return res.status(400).json({ error: "scenarioId is required." });
@@ -103,8 +103,8 @@ app.post("/api/progress/complete", requireAuth, (req, res) => {
   // Clamp the client-proposed award to a sane band, then record idempotently.
   const proposed = Number(req.body?.xp) || XP_MIN;
   const xp = Math.max(XP_MIN, Math.min(XP_MAX, Math.round(proposed)));
-  const awarded = recordCompletion(req.user.id, scenarioId, xp);
-  res.json({ ...progressSummary(req.user.id), newlyCompleted: awarded, awardedXp: awarded ? xp : 0 });
+  const awarded = await recordCompletion(req.user.id, scenarioId, xp);
+  res.json({ ...(await progressSummary(req.user.id)), newlyCompleted: awarded, awardedXp: awarded ? xp : 0 });
 });
 
 // ─── Volta AI tutor ──────────────────────────────────────────────────────────
